@@ -41,9 +41,6 @@
   <div class="console" id="console">[ Consola de estado ]</div>
 
   <script>
-    const { createFFmpeg, fetchFile } = FFmpeg;
-    const ffmpeg = createFFmpeg({ log: true });
-
     function log(msg) {
       const consoleDiv = document.getElementById('console');
       consoleDiv.innerHTML += `\n${msg}`;
@@ -60,12 +57,13 @@
       const file = fileInput.files[0];
       log(`📥 Archivo seleccionado: ${file.name}`);
 
+      const { createFFmpeg, fetchFile } = FFmpeg;
+      const ffmpeg = createFFmpeg({ log: true });
+
       try {
-        if (!ffmpeg.isLoaded()) {
-          log("🔄 Cargando FFmpeg...");
-          await ffmpeg.load();
-          log("✅ FFmpeg cargado.");
-        }
+        log("🔄 Cargando FFmpeg...");
+        await ffmpeg.load();
+        log("✅ FFmpeg cargado.");
 
         const inputName = 'input.mp4';
         const outputName = 'output.avi';
