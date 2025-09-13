@@ -57,20 +57,21 @@
       const file = fileInput.files[0];
       log(`📥 Archivo seleccionado: ${file.name}`);
 
-      const { createFFmpeg, fetchFile } = FFmpeg;
-      const ffmpeg = createFFmpeg({ log: true });
-
       try {
-        log("🔄 Cargando FFmpeg...");
+        const { createFFmpeg, fetchFile } = FFmpeg;
+        const ffmpeg = createFFmpeg({ log: true });
+
+        log("🔄 Inicializando FFmpeg...");
         await ffmpeg.load();
-        log("✅ FFmpeg cargado.");
+        log("✅ FFmpeg cargado correctamente.");
 
         const inputName = 'input.mp4';
         const outputName = 'output.avi';
 
+        log("📤 Cargando archivo en memoria...");
         ffmpeg.FS('writeFile', inputName, await fetchFile(file));
-        log("⚙️ Iniciando conversión...");
 
+        log("⚙️ Ejecutando conversión...");
         await ffmpeg.run(
           '-i', inputName,
           '-vf', 'scale=320:240:force_original_aspect_ratio=decrease,pad=320:240:(ow-iw)/2:(oh-ih)/2:black',
@@ -93,7 +94,7 @@
         document.body.appendChild(a);
       } catch (err) {
         log("❌ Error durante la conversión.");
-        log(err.message || err.toString());
+        log("Detalles: " + (err.message || err.toString()));
         console.error(err);
       }
     }
