@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Convertidor MP4 a AVI</title>
+  <script src="https@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js</script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
+    h2 { color: #333; }
+    .console { background: #000; color: #0f0; padding: 10px; font-family: monospace; height: 200px; overflow-y: auto; border-radius: 5px; white-space: pre-wrap; }
+    input, button { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>🎬 Convertidor MP4 a AVI (320x240 con bordes negros)</h2>
+  <input type="file" id="videoInput" accept=".mp4"><br>
+  <button onclick="convertVideo()">Convertir</button>
+  <div class="console" id="console">[ Consola de estado ]</div>
+
+  <script>
+    const { createFFmpeg, fetchFile } = FFmpeg;
+    const ffmpeg = createFFmpeg({ log: true });
+
+    function log(msg) {
+      const consoleDiv = document.getElementById('console');
+      consoleDiv.innerHTML += `\n${msg}`;
+      consoleDiv.scrollTop = consoleDiv.scrollHeight;
+    }
+
+    async function convertVideo() {
+      const fileInput = document.getElementById('videoInput');
+      if (!fileInput.files.length) {
+        log("❌ No se seleccionó ningún archivo.");
+        return;
+      }
+
+      const file = fileInput.files[0];
+      log(`📥 Archivo seleccionado: ${file.name}`);
+
+      if (!ffmpeg.isLoaded()) {
+        log("🔄 Cargando FFmpeg...");
+        await ffmpeg.load();
+        log("✅ FFmpeg cargado.");
+      }
+
+      const inputName = 'input.mp4';
+      const outputName = 'output.avi';
+
+      ffmpeg.FS('writeFile', inputName, await fetchFile(file));
+
+      log("⚙️ Iniciando conversión...");
+      try {
+        await ffmpeg.run(
+          '-i', inputName,
+          '-vf', 'scale=320:240:force_original_aspect_ratio=decrease,pad=320:240:(ow-iw)/2:(oh-ih)/2:black',
+          '-c:v', 'mpeg4',
+          '-c:a', 'pcm_s16le',
+          outputName
+        );
+
+        log("✅ Conversión completada.");
+        const data = ffmpeg.FS('readFile', outputName);
+        const videoBlob = new Blob([data.buffer], { type: 'video/avi' });
+        const url = URL.createObjectURL(videoBlob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'convertido.avi';
+        a.textContent = '⬇️ Descargar AVI';
+        a.style.display = 'block';
+        a.style.marginTop = '10px';
+        document.body.appendChild(a);
+      } catch (err) {
+        log("❌ Error durante la conversión.");
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
